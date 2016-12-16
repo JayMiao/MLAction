@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import scale
 # plt.style.use('ggplot')
 
-df = pd.read_csv('winequality-red.csv' , sep = ';')
+df = pd.read_csv('data/winequality-red.csv' , sep = ';')
 X = df.drop('quality' , 1).values
 X = scale(X)
 y1 = df['quality'].values
