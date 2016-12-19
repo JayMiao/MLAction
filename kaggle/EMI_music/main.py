@@ -46,12 +46,24 @@ words.fillna(0, inplace=True)
 feature 用户对 artist 的评价 来自words users train
 target  用户对 artist 的评分
 """
+from sklearn.metrics import mean_squared_error
+import math
+def rmse(y_true, y_pred):
+    mse = mean_squared_error(y_true, y_pred)
+    return math.sqrt(mse)
+
 from sklearn.linear_model import Lasso
+from sklearn import neighbors
+from sklearn.ensemble import RandomForestRegressor
+from sklearn import svm
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import mean_squared_error
+from xgboost import XGBRegressor
 artists = train['Artist'].unique()
 artist_model = {}
 for artist in artists:
     train_features = train[train.Artist == artist]
-    train_features = train_features[['User', 'Rating', 'Time']]
+    train_features = train_features[['User', 'Rating']]
 
     words_features = words[words.Artist == artist]
     words_features = words_features.drop('Artist', 1)
@@ -60,10 +72,21 @@ for artist in artists:
     X = pd.merge(X, users_scaled, left_on='User', right_on='RESPID')
     y = X['Rating']
     X = X.drop(['User','Rating'], 1)
+    # print X.columns
+    # exit()
 
-    clf = Lasso(alpha=0.5)
-    clf.fit(X.values,y.values)
-    artist_model[artist] = clf
+    # clf = Lasso(alpha=0.5)
+    clf = XGBRegressor(n_estimators=100, learning_rate=0.05)
+    # clf = RandomForestRegressor(n_estimators=100, max_features='sqrt')
+    # clf = svm.SVC()
+
+    #RMSE check
+    # print np.sqrt(mean_squared_error(y, clf.predict(X)))
+
+    # k-fold check
+    # score = cross_val_score(clf, X, y, cv=5, n_jobs=-1, scoring='neg_mean_squared_error')
+    # print np.sqrt(abs(score.mean()))
+    # artist_model[artist] = clf
 
 '''
 Predict:
@@ -76,12 +99,9 @@ test = pd.merge(test, words_features, left_on='User', right_on='User')
 result = []
 count = 100;
 for user_test in users_test.values:
-    if count == 0:
-        break;
-    count -= 1
     user = user_test[0]
     artist = user_test[1]
-    print 'Predicting: User - ' + 'ffdfd'
+    print "Predicting: User - %s", user
     model = artist_model[artist]
 
     row = test[(test.User == user) & (test.Artist == artist)]
